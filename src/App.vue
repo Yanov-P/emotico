@@ -167,97 +167,142 @@ async function addEntry() {
     </div>
 </template>
 
-<style>
-/* Базовые стили */
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #f0f2f5;
-}
-
+<style scoped>
 .container {
     max-width: 800px;
     margin: 0 auto;
-    padding: 2rem;
+    padding: 1rem;
+    min-height: 100vh;
+}
+
+/* Заголовок формы */
+.entry-form h2 {
+    color: var(--color-heading);
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--vt-c-indigo);
 }
 
 /* Форма */
 .entry-form {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: var(--color-background-soft);
+    padding: 2rem;
+    border-radius: 8px;
     margin-bottom: 2rem;
+    box-shadow: 0 2px 8px var(--color-border);
 }
 
+/* Поле комментария */
 .comment-input {
     width: 100%;
     height: 100px;
     padding: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
     margin: 1rem 0;
-    resize: vertical;
+    background: var(--color-background-mute);
+    color: var(--color-text);
+    font-family: inherit;
+    transition: border-color 0.3s ease;
 }
 
-.add-button {
-    background: #3b82f6;
-    color: white;
-    border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.2s;
+.comment-input:focus {
+    outline: none;
+    border-color: var(--vt-c-indigo);
+    box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.1);
 }
 
-.add-button:hover {
-    background: #2563eb;
-}
-
-/* Записи */
+/* Карточки записей */
 .entry-card {
-    background: white;
+    background: var(--color-background-soft);
     border-radius: 8px;
     padding: 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--color-border);
+    transition: transform 0.2s ease;
 }
 
-.entry-header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
+.entry-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 12px var(--color-border-hover);
 }
 
+/* Время записи */
 .time {
-    color: #64748b;
-    font-size: 0.9em;
+    color: var(--color-text-dark-2);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
 }
 
-.emotions {
-    display: flex;
-    flex-wrap: wrap;
+/* Эмоции */
+.emotion-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    background: var(--vt-c-indigo);
+    color: var(--vt-c-white);
+    display: inline-flex;
+    align-items: center;
     gap: 0.5rem;
 }
 
-.emotion-badge {
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    font-size: 0.9em;
-    color: white;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+/* Комментарий */
+.entry-card .comment {
+    color: var(--color-text);
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--color-background-mute);
+    border-radius: 6px;
+    white-space: pre-wrap;
 }
 
-/* Стили для MultiSelect */
-.emotion-option {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 20px;
-    margin: 2px;
-    color: white;
+/* Кнопка */
+.add-button {
+    background: var(--vt-c-indigo);
+    color: var(--vt-c-white);
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background 0.3s ease,
+        transform 0.2s ease;
 }
 
-.p-multiselect-items-wrapper {
-    max-height: 200px !important;
+.add-button:hover {
+    background: #34495e;
+    transform: translateY(-1px);
+}
+
+/* Адаптация PrimeVue под тему */
+:deep(.p-multiselect) {
+    background: var(--color-background-mute);
+    border-color: var(--color-border);
+    color: var(--color-text);
+}
+
+:deep(.p-multiselect .p-multiselect-label) {
+    color: var(--color-text);
+}
+
+:deep(.p-multiselect-panel) {
+    background: var(--color-background-soft);
+    border-color: var(--color-border);
+}
+
+:deep(.p-multiselect-item) {
+    color: var(--color-text);
+}
+
+:deep(.p-multiselect-item:hover) {
+    background: var(--color-background-mute);
 }
 </style>
