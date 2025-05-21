@@ -1,39 +1,55 @@
-# emotico
+# Emotico - An Emotion Diary 🤸🏻‍♂️
 
-This template should help get you started developing with Vue 3 in Vite.
+A visual diary for tracking emotions with categorization and customization. Record your emotions, add comments, and analyze your mood over time.
 
-## Recommended IDE Setup
+## Features ✨
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+- 📅 Track emotions with timestamps
+<!-- - 🎨 Group emotions into categories (joy, sadness, etc.) -->
+<!-- - 🌈 Customize category colors and emojis -->
+- 💬 Add text comments
+- 🔍 View entry history
+<!-- - 🔒 Private data storage -->
 
-## Type Support for `.vue` Imports in TS
+## Tech Stack 🛠️
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+**Frontend:**
+- Vue 3 + Composition API
+- Custom UI components
+- Responsive design
 
-## Customize configuration
+**Backend & Storage:**
+- Supabase (PostgreSQL)
+<!-- - Real-time authentication -->
+<!-- - Row Level Security -->
 
-See [Vite Configuration Reference](https://vite.dev/config/).
+<!-- **Infrastructure:** -->
+<!-- - Vercel (Hosting) -->
+<!-- - GitHub Actions (CI/CD) -->
 
-## Project Setup
+## Quick Start 🚀
 
-```sh
+### Prerequisites
+- Node.js 18+
+- Supabase account
+
+1. Install dependencies:
+```bash
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+2. Configure environment:
+```bash
+cp .env.example .env
+```
+3. Fill in the variables in .env:
+```bash
+VITE_SUPABASE_URL=your-supabase-url
+VITE_SUPABASE_KEY=your-supabase-anon-key
+```
 
-```sh
+
+4. Run the app:
+```bash
 npm run dev
-```
-
-### Type-Check, Compile and Minify for Production
-
-```sh
-npm run build
-```
-
-### Lint with [ESLint](https://eslint.org/)
-
-```sh
-npm run lint
 ```
