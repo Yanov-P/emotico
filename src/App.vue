@@ -1,11 +1,8 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { createClient } from '@supabase/supabase-js'
-import Dialog from 'primevue/dialog'
-import Button from 'primevue/button'
-import 'primevue/resources/themes/lara-light-blue/theme.css'
-import 'primevue/resources/primevue.min.css'
-import 'primeicons/primeicons.css'
+import Dialog from '@/components/Dialog.vue'
+import Button from '@/components/Button.vue'
 
 const supabase = createClient(
     import.meta.env.VITE_SUPABASE_URL,
@@ -150,8 +147,7 @@ async function addEntry() {
             <Button label="Добавить запись" @click="addEntry" class="add-button" />
 
             <!-- Модальное окно выбора эмоций -->
-            <Dialog v-model:visible="showEmotionModal" modal header="Выберите эмоции"
-                :style="{ width: '90vw', maxWidth: '800px' }">
+            <Dialog v-model:visible="showEmotionModal" modal header="Выберите эмоции">
                 <div v-for="group in emotionGroups" :key="group.id" class="emotion-group">
                     <div class="group-header">
                         <span class="group-emoji" :style="{ backgroundColor: group.color }">
