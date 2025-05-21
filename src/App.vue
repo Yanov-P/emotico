@@ -1,36 +1,31 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { createClient } from '@supabase/supabase-js'
+import MultiSelect from 'primevue/multiselect'
+import 'primevue/resources/themes/lara-light-blue/theme.css'
+import 'primevue/resources/primevue.min.css'
+import 'primeicons/primeicons.css'
 
+// Инициализация Supabase
 const supabase = createClient(
     import.meta.env.VITE_SUPABASE_URL,
     import.meta.env.VITE_SUPABASE_KEY
 )
 
-const emotionGroups = ref([])
+// Состояния приложения
 const entries = ref([])
+const emotionGroups = ref([])
 const selectedEmotions = ref([])
 const comment = ref('')
 const loading = ref(true)
 
-const emotionOptions = ref([])
-
-// Загрузка данных
+// Загрузка данных при монтировании
 onMounted(async () => {
     await loadEmotionGroups()
-    // await loadEntries()
-
-    emotionOptions.value = emotionGroups.value.flatMap(group =>
-        group.emotions.map(e => ({
-            name: e.name,
-            group: group.name,
-            emoji: group.emoji,
-            color: group.color,
-            value: e.id
-        }))
-    )
+    await loadEntries()
 })
 
+// Загрузка групп эмоций
 async function loadEmotionGroups() {
     const { data } = await supabase
         .from('emotion_groups')
@@ -39,19 +34,23 @@ async function loadEmotionGroups() {
       name,
       color,
       emoji,
-      emotions (id, name)
+      emotions!inner (
+        id,
+        name
+      )
     `)
 
     emotionGroups.value = data.map(group => ({
         ...group,
         emotions: group.emotions.map(e => ({
             ...e,
-            label: `${group.emoji} ${e.name}`,
-            groupColor: group.color
+            groupColor: group.color,
+            groupEmoji: group.emoji
         }))
     }))
 }
 
+// Загрузка записей дневника
 async function loadEntries() {
     const { data } = await supabase
         .from('diary_entries')
@@ -59,82 +58,104 @@ async function loadEntries() {
       id,
       comment,
       created_at,
-      entry_emotions (emotions(id, name, emotion_groups(color, emoji)))
+      entry_emotions (
+        emotions (
+          id,
+          name,
+          emotion_groups (
+            color,
+            emoji
+          )
+        )
+      )
     `)
         .order('created_at', { ascending: false })
 
-    entries.value = data
+    entries.value = data || []
     loading.value = false
 }
 
+// Добавление новой записи
 async function addEntry() {
-    const user = supabase.auth.user()
+    if (!selectedEmotions.value.length) return
 
-    // Создание записи
-    const { data: entry, error } = await supabase
-        .from('diary_entries')
-        .insert([{
-            comment: comment.value,
-            user_id: user.id
-        }])
-        .single()
+    try {
+        // Создаем запись
+        const { data: entry, error } = await supabase
+            .from('diary_entries')
+            .insert([{
+                comment: comment.value,
+                user_id: (await supabase.auth.getUser()).data.user?.id
+            }])
+            .single()
 
-    if (error) return console.error(error)
+        if (error) throw error
 
-    // Связи с эмоциями
-    const emotionsData = selectedEmotions.value.map(e => ({
-        entry_id: entry.id,
-        emotion_id: e.id
-    }))
+        // Связываем эмоции
+        const emotionsData = selectedEmotions.value.map(e => ({
+            entry_id: e.id,
+            emotion_id: e.id
+        }))
 
-    await supabase.from('entry_emotions').insert(emotionsData)
+        await supabase.from('entry_emotions').insert(emotionsData)
 
-    // Сброс формы
-    comment.value = ''
-    selectedEmotions.value = []
-    await loadEntries()
+        // Сброс и обновление
+        comment.value = ''
+        selectedEmotions.value = []
+        await loadEntries()
+
+    } catch (error) {
+        console.error('Error adding entry:', error)
+    }
 }
 </script>
 
 <template>
-    <main class="container">
+    <div class="container">
         <!-- Форма добавления -->
         <div class="entry-form">
-            <h2>Новая запись</h2>
+            <h2>📝 Новая запись</h2>
 
-            <MultiSelect v-model="selectedEmotions" :options="emotionOptions" optionLabel="name" :pt="{
-                root: { class: 'w-full' },
-                labelContainer: { class: 'flex flex-wrap gap-2' }
-            }">
+            <MultiSelect v-model="selectedEmotions" :options="emotionGroups.flatMap(g => g.emotions)" optionLabel="name"
+                :pt="{
+                    root: { class: 'w-full mb-4' },
+                    labelContainer: { class: 'flex flex-wrap gap-2' }
+                }" placeholder="Выберите эмоции...">
                 <template #option="{ option }">
-                    <span class="emotion-tag" :style="{ backgroundColor: option.color }">
-                        {{ option.emoji }} {{ option.name }}
+                    <span class="emotion-option" :style="{ backgroundColor: option.groupColor }">
+                        {{ option.groupEmoji }} {{ option.name }}
                     </span>
                 </template>
 
                 <template #value="{ value }">
-                    <span v-for="item in value" :key="item.value" class="emotion-tag"
-                        :style="{ backgroundColor: item.color }">
-                        {{ item.emoji }} {{ item.name }}
+                    <span v-for="item in value" :key="item.id" class="emotion-tag"
+                        :style="{ backgroundColor: item.groupColor }">
+                        {{ item.groupEmoji }} {{ item.name }}
                     </span>
                 </template>
             </MultiSelect>
 
-            <textarea v-model="comment" placeholder="Ваш комментарий..."></textarea>
+            <textarea v-model="comment" placeholder="Ваш комментарий..." class="comment-input"></textarea>
 
-            <button @click="addEntry">Добавить</button>
+            <button @click="addEntry" class="add-button">
+                ➕ Добавить запись
+            </button>
         </div>
 
         <!-- Список записей -->
-        <div v-if="loading">Загрузка...</div>
+        <div v-if="loading" class="loading">Загрузка...</div>
         <div v-else class="entries">
             <div v-for="entry in entries" :key="entry.id" class="entry-card">
                 <div class="entry-header">
-                    <time>{{ new Date(entry.created_at).toLocaleTimeString() }}</time>
-                    <div class="emotion-tags">
-                        <span v-for="e in entry.entry_emotions" :key="e.emotions.id" class="tag"
-                            :style="{ backgroundColor: e.emotions.emotion_groups.color }">
-                            {{ e.emotions.emotion_groups.emoji }} {{ e.emotions.name }}
+                    <span class="time">
+                        {{ new Date(entry.created_at).toLocaleTimeString() }}
+                    </span>
+                    <div class="emotions">
+                        <span v-for="e in entry.entry_emotions" :key="e.emotions.id" class="emotion-badge" :style="{
+                            backgroundColor: e.emotions.emotion_groups.color
+                        }">
+                            {{ e.emotions.emotion_groups.emoji }}
+                            {{ e.emotions.name }}
                         </span>
                     </div>
                 </div>
@@ -143,20 +164,14 @@ async function addEntry() {
                 </p>
             </div>
         </div>
-    </main>
+    </div>
 </template>
 
 <style>
-@import 'primevue/resources/themes/lara-light-blue/theme.css';
-@import 'primeicons/primeicons.css';
-
-.emotion-tag {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-white text-sm mr-2 mb-2;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-}
-
-.p-multiselect {
-    @apply w-full mb-4;
+/* Базовые стили */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f2f5;
 }
 
 .container {
@@ -165,35 +180,84 @@ async function addEntry() {
     padding: 2rem;
 }
 
+/* Форма */
 .entry-form {
-    background: #f8f9fa;
+    background: white;
     padding: 1.5rem;
     border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 2rem;
 }
 
-.vue-select .emotion-option {
-    padding: 4px 8px;
+.comment-input {
+    width: 100%;
+    height: 100px;
+    padding: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin: 1rem 0;
+    resize: vertical;
+}
+
+.add-button {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.add-button:hover {
+    background: #2563eb;
+}
+
+/* Записи */
+.entry-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.entry-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.time {
+    color: #64748b;
+    font-size: 0.9em;
+}
+
+.emotions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.emotion-badge {
+    padding: 0.25rem 0.75rem;
     border-radius: 20px;
-    margin: 2px;
+    font-size: 0.9em;
     color: white;
     text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
-.entry-card {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+/* Стили для MultiSelect */
+.emotion-option {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    margin: 2px;
+    color: white;
 }
 
-.emotion-tags .tag {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    margin: 4px;
-    font-size: 0.9em;
-    color: white;
+.p-multiselect-items-wrapper {
+    max-height: 200px !important;
 }
 </style>
