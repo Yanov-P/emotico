@@ -3,6 +3,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { createClient } from '@supabase/supabase-js'
 import Dialog from '@/components/Dialog.vue'
 import Button from '@/components/Button.vue'
+import { Entry } from './entites'
+import EmotionsList from './components/EmotionsList.vue'
 
 const supabase = createClient(
     import.meta.env.VITE_SUPABASE_URL,
@@ -68,8 +70,12 @@ async function loadEntries() {
     `)
         .order('created_at', { ascending: false })
 
-    entries.value = data || []
+    entries.value = data ? mapEntriesData(data) : []
     loading.value = false
+}
+
+function mapEntriesData(data) {
+    return data.map(item => new Entry(item));
 }
 
 // Логика выбора эмоций
@@ -178,16 +184,9 @@ async function addEntry() {
             <div v-for="entry in entries" :key="entry.id" class="entry-card">
                 <div class="entry-header">
                     <span class="time">
-                        {{ new Date(entry.created_at).toLocaleTimeString() }}
+                        {{ entry.createdAt.toLocaleTimeString() }}
                     </span>
-                    <div class="emotions">
-                        <span v-for="e in entry.entry_emotions" :key="e.emotions.id" class="emotion-badge" :style="{
-                            backgroundColor: e.emotions.emotion_groups.color
-                        }">
-                            {{ e.emotions.emotion_groups.emoji }}
-                            {{ e.emotions.name }}
-                        </span>
-                    </div>
+                    <EmotionsList :emotions="entry.emotions"></EmotionsList>
                 </div>
                 <p v-if="entry.comment" class="comment">
                     {{ entry.comment }}
@@ -197,7 +196,7 @@ async function addEntry() {
     </div>
 </template>
 
-<style scoped>
+<style>
 .container {
     max-width: 800px;
     margin: 0 auto;
@@ -274,19 +273,6 @@ async function addEntry() {
     font-size: 0.9rem;
     margin-bottom: 0.5rem;
     display: block;
-}
-
-.emotion-badge {
-    padding: 0.4rem 1rem;
-    border-radius: 20px;
-    font-size: 0.9rem;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-    background: var(--vt-c-indigo);
-    color: var(--vt-c-white);
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
 }
 
 .comment {
