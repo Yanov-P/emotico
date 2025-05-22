@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { createClient } from '@supabase/supabase-js'
 import Dialog from '@/components/Dialog.vue'
 import Button from '@/components/Button.vue'
-import { Entry } from './entites'
+import { Emotion, Entry } from './entites'
 import EmotionsList from './components/EmotionsList.vue'
 
 const supabase = createClient(
@@ -42,10 +42,9 @@ async function loadEmotionGroups() {
 
     emotionGroups.value = data.map(group => ({
         ...group,
-        emotions: group.emotions.map(e => ({
+        emotions: group.emotions.map(e => new Emotion({
             ...e,
-            groupColor: group.color,
-            groupEmoji: group.emoji
+            emotion_groups: group
         }))
     }))
 }
@@ -100,6 +99,7 @@ watch(showEmotionModal, (val) => {
 
 const applySelection = () => {
     selectedEmotions.value = [...selectedEmotionsTemp.value]
+    console.log(selectedEmotions.value)
     showEmotionModal.value = false
 }
 
@@ -141,6 +141,7 @@ async function addEntry() {
         <div class="entry-form">
             <h2>📝 Новая запись</h2>
 
+            <EmotionsList :emotions="selectedEmotions"></EmotionsList>
             <Button @click="showEmotionModal = true" class="select-emotions-btn">
                 <span v-if="selectedEmotions.length === 0">Выбрать эмоции</span>
                 <span v-else>
